@@ -1,0 +1,49 @@
+{
+  "properties": [
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "description": "A description for 'jwt.secret'"
+    },
+    {
+      "name": "jwt.refresh-token-expiration",
+      "type": "java.lang.String",
+      "description": "A description for 'jwt.refresh-token-expiration'"
+    },
+    {
+      "name": "jwt.access-token-expiration",
+      "type": "java.lang.String",
+      "description": "A description for 'jwt.access-token-expiration'"
+    },
+    {
+      "name": "auth.login-max-attempts",
+      "type": "java.lang.String",
+      "description": "A description for 'auth.login-max-attempts'"
+    },
+    {
+      "name": "auth.login-attempts-timeout",
+      "type": "java.lang.String",
+      "description": "A description for 'auth.login-attempts-timeout'"
+    },
+    {
+      "name": "auth.login-lockout-minutes",
+      "type": "java.lang.String",
+      "description": "A description for 'auth.login-lockout-minutes'"
+    },
+    {
+      "name": "spring.flyway.enabled",
+      "type": "java.lang.String",
+      "description": "A description for 'spring.flyway.enabled'"
+    },
+    {
+      "name": "spring.flyway.locations",
+      "type": "java.lang.String",
+      "description": "A description for 'spring.flyway.locations'"
+    },
+    {
+      "name": "spring.flyway.baseline-on-migrate",
+      "type": "java.lang.String",
+      "description": "A description for 'spring.flyway.baseline-on-migrate'"
+    }
+  ]
+}

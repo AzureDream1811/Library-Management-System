@@ -17,8 +17,6 @@ spring:
             port: 6379
     flyway:
         enabled: true
-        baseline-on-migrate: true
-        locations: classpath:db/migration
 
 jwt:
     secret: ${JWT_SECRET}
@@ -26,8 +24,9 @@ jwt:
     refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}
 
 auth:
-  login-max-attempts: 5
-  login-lockout-minutes: 15
+    login-max-attempts: 5
+    login-attempts-timeout: 300
+    login-lockout-minutes: 15
 
 server:
     port: 8081
