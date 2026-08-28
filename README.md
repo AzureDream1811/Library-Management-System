@@ -14,7 +14,7 @@ cổng thanh toán (đề xuất VNPay sandbox — phổ biến cho portfolio de
 ## 2. Actors / Roles
 
 | Role    | Quyền hạn                                                                                     |
-|---------|-----------------------------------------------------------------------------------------------|
+| ------- | --------------------------------------------------------------------------------------------- |
 | `ADMIN` | CRUD sách, quản lý thành viên, xem tất cả giao dịch mượn/trả và thanh toán, cấu hình phí phạt |
 | `USER`  | Tìm kiếm sách, mượn/trả sách, xem lịch sử của mình, thanh toán phí phạt/phí thành viên        |
 
@@ -25,7 +25,7 @@ cổng thanh toán (đề xuất VNPay sandbox — phổ biến cho portfolio de
 ### 3.1 `User`
 
 | Field               | Type                                 | Ghi chú           |
-|---------------------|--------------------------------------|-------------------|
+| ------------------- | ------------------------------------ | ----------------- |
 | id                  | Long                                 | PK                |
 | fullName            | String                               |                   |
 | email               | String                               | unique            |
@@ -37,7 +37,7 @@ cổng thanh toán (đề xuất VNPay sandbox — phổ biến cho portfolio de
 ### 3.2 `Book`
 
 | Field               | Type   | Ghi chú                     |
-|---------------------|--------|-----------------------------|
+| ------------------- | ------ | --------------------------- |
 | id                  | Long   | PK                          |
 | title, author, isbn | String |                             |
 | totalCopies         | int    |                             |
@@ -46,7 +46,7 @@ cổng thanh toán (đề xuất VNPay sandbox — phổ biến cho portfolio de
 ### 3.3 `BorrowRecord`
 
 | Field      | Type                                    | Ghi chú                                          |
-|------------|-----------------------------------------|--------------------------------------------------|
+| ---------- | --------------------------------------- | ------------------------------------------------ |
 | id         | Long                                    | PK                                               |
 | user       | FK → User                               |                                                  |
 | book       | FK → Book                               |                                                  |
@@ -56,10 +56,10 @@ cổng thanh toán (đề xuất VNPay sandbox — phổ biến cho portfolio de
 | status     | Enum(`BORROWED`, `RETURNED`, `OVERDUE`) |                                                  |
 | fineAmount | BigDecimal                              | tính khi trả trễ hoặc job scheduled quét overdue |
 
-### 3.4 `Payment` (mới)
+### 3.4 `Payment`
 
 | Field               | Type                                 | Ghi chú                            |
-|---------------------|--------------------------------------|------------------------------------|
+| ------------------- | ------------------------------------ | ---------------------------------- |
 | id                  | Long                                 | PK                                 |
 | user                | FK → User                            |                                    |
 | type                | Enum(`FINE`, `MEMBERSHIP_FEE`)       |                                    |
@@ -93,8 +93,8 @@ cổng thanh toán (đề xuất VNPay sandbox — phổ biến cho portfolio de
 ### 4.4 Thanh toán (mới)
 
 - Tạo `Payment` khi:
-    - User trả sách trễ → tự động tạo `Payment(type=FINE)` ở trạng thái `PENDING`
-    - User đăng ký/gia hạn thành viên → tạo `Payment(type=MEMBERSHIP_FEE)`
+  - User trả sách trễ → tự động tạo `Payment(type=FINE)` ở trạng thái `PENDING`
+  - User đăng ký/gia hạn thành viên → tạo `Payment(type=MEMBERSHIP_FEE)`
 - User thanh toán qua cổng VNPay sandbox → redirect sang trang thanh toán → callback (`IPN URL`) cập nhật
   `status = SUCCESS/FAILED` và `transactionRef`
 - Khi `Payment(type=FINE)` thành công → không chặn mượn sách mới nữa
@@ -104,7 +104,7 @@ cổng thanh toán (đề xuất VNPay sandbox — phổ biến cho portfolio de
 
 ## 5. API Endpoints (tóm tắt)
 
-```
+```java
 Auth
 POST   /api/auth/register
 POST   /api/auth/login
