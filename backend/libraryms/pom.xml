@@ -167,8 +167,14 @@
 			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
 
+		<!-- configuration -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
+	</dependencies>
 	<build>
 		<plugins>
 			<plugin>

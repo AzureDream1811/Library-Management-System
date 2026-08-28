@@ -26,8 +26,9 @@ jwt:
     refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}
 
 auth:
-  login-max-attempts: 5
-  login-lockout-minutes: 15
+    login-max-attempts: 5
+    login-attempts-timeout: 300
+    login-lockout-minutes: 15
 
 server:
     port: 8081
