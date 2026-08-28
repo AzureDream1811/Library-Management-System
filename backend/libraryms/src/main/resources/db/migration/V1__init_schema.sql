@@ -71,7 +71,10 @@ CREATE TABLE payments (
     CONSTRAINT fk_payments_borrow_record FOREIGN KEY (related_borrow_record_id) REFERENCES borrow_records (id),
     CONSTRAINT chk_payments_type CHECK (type IN ('FINE', 'MEMBERSHIP_FEE')),
     CONSTRAINT chk_payments_status CHECK (status IN ('PENDING', 'SUCCESS', 'FAILED')),
-    CONSTRAINT chk_payments_amount CHECK (amount > 0)
+    CONSTRAINT chk_payments_amount CHECK (amount > 0),
+    CONSTRAINT chk_payments_fine_has_record CHECK (
+    (type = 'FINE' AND related_borrow_record_id IS NOT NULL) OR (type = 'MEMBERSHIP_FEE')
+)
 );
 
 CREATE INDEX idx_payments_user_id ON payments (user_id);

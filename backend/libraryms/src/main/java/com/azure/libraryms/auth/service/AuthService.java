@@ -1,5 +1,7 @@
 package com.azure.libraryms.auth.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -47,6 +49,7 @@ public class AuthService {
                 .fullName(request.fullName())
                 .role(Role.USER)
                 .membershipStatus(MembershipStatus.PENDING)
+                .createdAt(LocalDateTime.now())
                 .build();
         try {
             User savedUser = userRepository.save(user);
