@@ -36,8 +36,11 @@ public class SecurityConfig {
         http.csrf(a -> a.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/forgot-password")
-                        .permitAll()
+                        .requestMatchers(
+                            "/api/v1/auth/login", 
+                            "/api/v1/auth/refresh", 
+                            "/api/v1/auth/forgot-password", 
+                            "/api/v1/auth/register").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, res, e) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
