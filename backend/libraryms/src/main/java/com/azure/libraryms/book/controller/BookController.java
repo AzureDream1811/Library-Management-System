@@ -1,6 +1,7 @@
 package com.azure.libraryms.book.controller;
 
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,6 +18,7 @@ import com.azure.libraryms.book.dto.request.BookPatchRequest;
 import com.azure.libraryms.book.dto.request.BookSearchRequest;
 import com.azure.libraryms.book.dto.response.BookResponse;
 import com.azure.libraryms.book.service.BookService;
+import com.azure.libraryms.common.dto.response.PageResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,10 +35,12 @@ public class BookController {
         return ResponseEntity.status(HttpStatus.CREATED).body(bookResponse);
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<Page<BookResponse>> searchBooks(@RequestBody BookSearchRequest request) {
+    @GetMapping
+    public PageResponse<BookResponse> searchBooks(
+            BookSearchRequest request,
+            @PageableDefault(size = 20, sort = "title") Pageable pageable) {
 
-        return ResponseEntity.ok(bookService.searchBooks(request));
+        return PageResponse.from(bookService.searchBooks(request, pageable));
     }
 
     @PatchMapping("/{id}")

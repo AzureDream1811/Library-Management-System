@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -58,14 +59,14 @@ public class BookService {
 
     // Search book
     @Transactional(readOnly = true)
-    public Page<BookResponse> searchBooks(BookSearchRequest request) {
+    public Page<BookResponse> searchBooks(BookSearchRequest request, Pageable pageable) {
         Specification<Book> spec = Specification
                 .where(BookSpecification.notDeleted())
                 .and(BookSpecification.hasKeyword("title", request.title()))
                 .and(BookSpecification.hasKeyword("author", request.author()))
                 .and(BookSpecification.hasIsbn(request.isbn()));
 
-        return bookRepository.findAll(spec, request.pageable())
+        return bookRepository.findAll(spec, pageable)
                 .map(bookMapper::mapToBookResponse);
     }
 
