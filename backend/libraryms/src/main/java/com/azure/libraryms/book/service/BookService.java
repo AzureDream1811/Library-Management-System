@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,7 @@ public class BookService {
     private final BookMapper bookMapper;
 
     // Create book
+    @PreAuthorize("hasRole('ADMIN')")
     public BookResponse createBook(BookCreateRequest request) {
         if (bookRepository.findByIsbn(request.isbn()).isPresent()) {
             throw new EntityNotFoundException("Book", "ISBN", request.isbn());
@@ -54,9 +56,9 @@ public class BookService {
         }
     }
 
-    // Get book
+    // Search book
     @Transactional(readOnly = true)
-    public Page<BookResponse> getBooks(BookSearchRequest request) {
+    public Page<BookResponse> searchBooks(BookSearchRequest request) {
         Specification<Book> spec = Specification
                 .where(BookSpecification.notDeleted())
                 .and(BookSpecification.hasKeyword("title", request.title()))
@@ -68,6 +70,7 @@ public class BookService {
     }
 
     // Update book
+    @PreAuthorize("hasRole('ADMIN')")
     public BookResponse patchUpdate(Long id, BookPatchRequest request) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Book", "ID", id.toString()));
@@ -97,6 +100,7 @@ public class BookService {
     }
 
     // Delete book
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteBook(Long id) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Book", "ID", id.toString()));
