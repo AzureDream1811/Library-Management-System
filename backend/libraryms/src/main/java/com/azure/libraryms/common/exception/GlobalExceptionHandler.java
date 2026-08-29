@@ -9,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.azure.libraryms.borrow.exceptions.MaxBorrowReachedException;
+import com.azure.libraryms.borrow.exceptions.NoAvailableCopiesException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -22,7 +25,11 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.CONFLICT, "Conflict");
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler({
+            IllegalArgumentException.class,
+            MaxBorrowReachedException.class,
+            NoAvailableCopiesException.class,
+    })
     public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, "Bad Request");
     }
