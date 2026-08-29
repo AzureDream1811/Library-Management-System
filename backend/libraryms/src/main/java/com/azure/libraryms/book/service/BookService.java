@@ -3,16 +3,19 @@ package com.azure.libraryms.book.service;
 import java.time.LocalDateTime;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.azure.libraryms.book.dto.request.BookCreateRequest;
-import com.azure.libraryms.book.dto.request.BookGetBtIsbnRequest;
 import com.azure.libraryms.book.dto.request.BookPatchRequest;
+import com.azure.libraryms.book.dto.request.BookSearchRequest;
 import com.azure.libraryms.book.dto.response.BookResponse;
 import com.azure.libraryms.book.mapper.BookMapper;
 import com.azure.libraryms.book.model.Book;
 import com.azure.libraryms.book.repository.BookRepository;
+import com.azure.libraryms.book.repository.BookSpecification;
 import com.azure.libraryms.common.exception.EntityAlreadyExistsException;
 import com.azure.libraryms.common.exception.EntityNotFoundException;
 import com.azure.libraryms.common.exception.IllegalArgumentException;
@@ -53,11 +56,15 @@ public class BookService {
 
     // Get book
     @Transactional(readOnly = true)
-    public BookResponse getBookByIsbn(BookGetBtIsbnRequest request) {
-        Book book = bookRepository.findByIsbn(request.isbn())
-                .orElseThrow(() -> new EntityNotFoundException("Book", "ISBN", request.isbn()));
+    public Page<BookResponse> getBooks(BookSearchRequest request) {
+        Specification<Book> spec = Specification
+                .where(BookSpecification.notDeleted())
+                .and(BookSpecification.hasKeyword("title", request.title()))
+                .and(BookSpecification.hasKeyword("author", request.author()))
+                .and(BookSpecification.hasIsbn(request.isbn()));
 
-        return bookMapper.mapToBookResponse(book);
+        return bookRepository.findAll(spec, request.pageable())
+                .map(bookMapper::mapToBookResponse);
     }
 
     // Update book
