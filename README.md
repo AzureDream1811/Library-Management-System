@@ -2,12 +2,9 @@
 
 ## 1. Tổng quan
 
-Hệ thống quản lý thư viện cho phép độc giả (`USER`) mượn/trả sách, thanh toán phí phạt trễ hạn và phí thành viên; quản
-trị viên (`ADMIN`) quản lý sách, thành viên và theo dõi giao dịch. Backend xây bằng **Spring Boot** (Modular Monolith),
-có phân quyền theo role và tích hợp cổng thanh toán.
+Hệ thống quản lý thư viện cho phép độc giả (`USER`) mượn/trả sách, thanh toán phí phạt trễ hạn và phí thành viên; quản trị viên (`ADMIN`) quản lý sách, thành viên và theo dõi giao dịch. Backend xây bằng **Spring Boot** (Modular Monolith), có phân quyền theo role và tích hợp cổng thanh toán.
 
-**Phạm vi bổ sung so với bản gốc:** thêm module `Payment` để xử lý phí phạt trễ hạn và phí đăng ký thành viên, tích hợp
-cổng thanh toán (đề xuất VNPay sandbox — phổ biến cho portfolio dev VN, có docs rõ ràng, dễ demo).
+**Phạm vi bổ sung so với bản gốc:** thêm module `Payment` để xử lý phí phạt trễ hạn và phí đăng ký thành viên, tích hợp cổng thanh toán (đề xuất VNPay sandbox — phổ biến cho portfolio dev VN, có docs rõ ràng, dễ demo).
 
 ---
 
@@ -33,15 +30,20 @@ cổng thanh toán (đề xuất VNPay sandbox — phổ biến cho portfolio de
 | role                | Enum(`ADMIN`, `USER`)                |                   |
 | membershipStatus    | Enum(`ACTIVE`, `EXPIRED`, `PENDING`) | phụ thuộc Payment |
 | membershipExpiresAt | LocalDate                            |                   |
+| createdAt           | LocalDateTime                        | audit field       |
+| updatedAt           | LocalDateTime                        | audit field       |
 
 ### 3.2 `Book`
 
-| Field               | Type   | Ghi chú                     |
-| ------------------- | ------ | --------------------------- |
-| id                  | Long   | PK                          |
-| title, author, isbn | String |                             |
-| totalCopies         | int    |                             |
-| availableCopies     | int    | giảm khi mượn, tăng khi trả |
+| Field               | Type          | Ghi chú                     |
+| ------------------- | ------------- | --------------------------- |
+| id                  | Long          | PK                          |
+| title, author, isbn | String        |                             |
+| totalCopies         | int           |                             |
+| availableCopies     | int           | giảm khi mượn, tăng khi trả |
+| createdAt           | LocalDateTime | audit field                 |
+| updatedAt           | LocalDateTime | audit field                 |
+| deletedAt           | LocalDateTime |                             |
 
 ### 3.3 `BorrowRecord`
 
@@ -55,8 +57,10 @@ cổng thanh toán (đề xuất VNPay sandbox — phổ biến cho portfolio de
 | returnDate | LocalDate                               | null nếu chưa trả                                |
 | status     | Enum(`BORROWED`, `RETURNED`, `OVERDUE`) |                                                  |
 | fineAmount | BigDecimal                              | tính khi trả trễ hoặc job scheduled quét overdue |
+| createdAt  | LocalDateTime                           | audit field                                      |
+| updatedAt  | LocalDateTime                           | audit field                                      |
 
-### 3.4 `Payment`
+### 3.4 `Payment` (mới)
 
 | Field               | Type                                 | Ghi chú                            |
 | ------------------- | ------------------------------------ | ---------------------------------- |
@@ -69,6 +73,8 @@ cổng thanh toán (đề xuất VNPay sandbox — phổ biến cho portfolio de
 | provider            | String                               | vd: "VNPAY"                        |
 | transactionRef      | String                               | mã giao dịch trả về từ gateway     |
 | paidAt              | LocalDateTime                        | null nếu chưa thanh toán           |
+| createdAt           | LocalDateTime                        | audit field                        |
+| updatedAt           | LocalDateTime                        | audit field                        |
 
 ---
 
@@ -85,8 +91,7 @@ cổng thanh toán (đề xuất VNPay sandbox — phổ biến cho portfolio de
 
 ### 4.3 Mượn / trả sách (USER)
 
-- Mượn sách: kiểm tra `availableCopies > 0`, kiểm tra `membershipStatus = ACTIVE`, giới hạn số sách mượn cùng lúc (vd:
-  tối đa 5)
+- Mượn sách: kiểm tra `availableCopies > 0`, kiểm tra `membershipStatus = ACTIVE`, giới hạn số sách mượn cùng lúc (vd: tối đa 5)
 - Trả sách: tính `fineAmount` nếu `returnDate > dueDate` (vd: 5,000đ/ngày trễ)
 - Scheduled job (`@Scheduled`) quét các bản ghi quá hạn mỗi ngày để cập nhật status `OVERDUE`
 
@@ -95,8 +100,7 @@ cổng thanh toán (đề xuất VNPay sandbox — phổ biến cho portfolio de
 - Tạo `Payment` khi:
   - User trả sách trễ → tự động tạo `Payment(type=FINE)` ở trạng thái `PENDING`
   - User đăng ký/gia hạn thành viên → tạo `Payment(type=MEMBERSHIP_FEE)`
-- User thanh toán qua cổng VNPay sandbox → redirect sang trang thanh toán → callback (`IPN URL`) cập nhật
-  `status = SUCCESS/FAILED` và `transactionRef`
+- User thanh toán qua cổng VNPay sandbox → redirect sang trang thanh toán → callback (`IPN URL`) cập nhật `status = SUCCESS/FAILED` và `transactionRef`
 - Khi `Payment(type=FINE)` thành công → không chặn mượn sách mới nữa
 - Khi `Payment(type=MEMBERSHIP_FEE)` thành công → cập nhật `membershipStatus = ACTIVE`, `membershipExpiresAt`
 

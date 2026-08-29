@@ -28,37 +28,16 @@ public class JwtService {
     private long refreshExpiration;
 
     public String generateAccessToken(UserDetails user) {
-        return Jwts.builder()
-                .id(UUID.randomUUID().toString())
-                .subject(user.getUsername()) // Assuming username is the email
-                .claim("role", user.getAuthorities().iterator().next().getAuthority())
-                .claim("type", "ACCESS")
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + accessExpiration))
-                .signWith(getSigningKey())
-                .compact();
+        return generateToken(user, "ACCESS", accessExpiration);
     }
 
     public String generateRefreshToken(UserDetails user) {
-        return Jwts.builder()
-                .id(UUID.randomUUID().toString())
-                .subject(user.getUsername()) // Assuming username is the email
-                .claim("type", "REFRESH")
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + refreshExpiration))
-                .signWith(getSigningKey())
-                .compact();
+        return generateToken(user, "REFRESH", refreshExpiration);
     }
 
     public String generateResetToken(UserDetails user) {
-        return Jwts.builder()
-                .id(UUID.randomUUID().toString())
-                .subject(user.getUsername()) // Assuming username is the email
-                .claim("type", "RESET")
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + Duration.ofHours(1).toMillis())) // 1 hour expiration
-                .signWith(getSigningKey())
-                .compact();
+        // TODO : Implement a separate expiration for reset tokens if needed
+        return generateToken(user, "RESET", refreshExpiration); 
     }
 
     public String extractEmail(String token) {
@@ -85,7 +64,18 @@ public class JwtService {
         return Duration.ofMillis(Math.max(diffMs, 0));
     }
 
-    private Claims parseClaims(String token) {
+    private String generateToken(UserDetails user, String type, long expiration) {
+        return Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .subject(user.getUsername())
+                .claim("type", type)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public Claims parseClaims(String token) {
         return Jwts.parser().verifyWith(getSigningKey()).build()
                 .parseSignedClaims(token).getPayload();
     }
