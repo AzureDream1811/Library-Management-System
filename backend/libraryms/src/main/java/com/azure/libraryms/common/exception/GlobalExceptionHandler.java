@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.azure.libraryms.borrow.exceptions.BookUnavailableException;
 import com.azure.libraryms.borrow.exceptions.MaxBorrowReachedException;
 import com.azure.libraryms.borrow.exceptions.NoAvailableCopiesException;
+import com.azure.libraryms.borrow.exceptions.InvalidBorrowStatusException;
 import com.azure.libraryms.common.dto.response.ErrorResponse;
 
 @RestControllerAdvice
@@ -31,7 +32,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
         IllegalArgumentException.class,
         MaxBorrowReachedException.class,
-        NoAvailableCopiesException.class
+        NoAvailableCopiesException.class,
+        InvalidBorrowStatusException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequestExceptions(RuntimeException ex) {
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, "Bad Request");

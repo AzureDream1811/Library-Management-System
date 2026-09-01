@@ -1,7 +1,11 @@
 package com.azure.libraryms.borrow.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +16,7 @@ import com.azure.libraryms.book.repository.BookRepository;
 import com.azure.libraryms.borrow.dto.request.BorrowRecordCreateRequest;
 import com.azure.libraryms.borrow.dto.resposne.BorrowRecordResponse;
 import com.azure.libraryms.borrow.exceptions.BookUnavailableException;
+import com.azure.libraryms.borrow.exceptions.InvalidBorrowStatusException;
 import com.azure.libraryms.borrow.exceptions.MaxBorrowReachedException;
 import com.azure.libraryms.borrow.exceptions.NoAvailableCopiesException;
 import com.azure.libraryms.borrow.mapper.BorrowRecordMapper;
@@ -32,6 +37,8 @@ public class BorrowRecordService {
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
     private final BorrowRecordMapper borrowRecordMapper;
+
+    private final BigDecimal finePerDay = new BigDecimal("1.00");
 
     public BorrowRecordResponse createBorrowRecord(BorrowRecordCreateRequest request) {
         User user = userRepository.findById(request.userId())
@@ -56,10 +63,52 @@ public class BorrowRecordService {
         } catch (OptimisticLockException e) {
             throw new BookUnavailableException(book.getId());
         }
-        
+
         BorrowRecord savedBorrowRecord = borrowRecordRepository.save(borrowRecord);
 
         return borrowRecordMapper.toBorrowRecordResponse(savedBorrowRecord);
+    }
+
+    public BorrowRecordResponse returnBook(Long borrowRecordId) {
+        BorrowRecord borrowRecord = borrowRecordRepository.findById(borrowRecordId)
+                .orElseThrow(() -> new EntityNotFoundException("BorrowRecord", "ID", borrowRecordId.toString()));
+
+        if (borrowRecord.getStatus() != BorrowStatus.BORROWED && borrowRecord.getStatus() != BorrowStatus.OVERDUE) {
+            throw new InvalidBorrowStatusException(borrowRecord.getBook().getId(), borrowRecord.getStatus());
+        }
+
+        LocalDate returnDate = LocalDate.now();
+        borrowRecord.setReturnDate(returnDate);
+        borrowRecord.setStatus(BorrowStatus.RETURNED);
+
+        if (returnDate.isAfter(borrowRecord.getDueDate())) {
+            long overdueDays = ChronoUnit.DAYS.between(borrowRecord.getDueDate(), returnDate);
+            BigDecimal fineAmount = finePerDay.multiply(BigDecimal.valueOf(overdueDays));
+            borrowRecord.setFineAmount(fineAmount);
+
+            // TODO: create a fine payment with payment repository and set the fine payment status to unpaid
+        }
+
+        Book book = borrowRecord.getBook();
+        try {
+            book.setAvailableCopies(book.getAvailableCopies() + 1);
+            bookRepository.save(book);
+        } catch (OptimisticLockException e) {
+            throw new BookUnavailableException(book.getId());
+        }
+
+        BorrowRecord updatedBorrowRecord = borrowRecordRepository.save(borrowRecord);
+
+        return borrowRecordMapper.toBorrowRecordResponse(updatedBorrowRecord);
+    }
+
+    public Page<BorrowRecordResponse> getUserBorrowRecords(Long userId, Pageable pageable) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User", "ID", userId.toString()));
+
+        Page<BorrowRecord> borrowRecords = borrowRecordRepository.findByUser(user, pageable);
+
+        return null;
     }
 
     private void validateBorrowEligibility(User user, Book book) {
