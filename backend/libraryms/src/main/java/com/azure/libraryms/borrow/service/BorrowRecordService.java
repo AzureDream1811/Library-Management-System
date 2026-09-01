@@ -6,6 +6,7 @@ import java.time.temporal.ChronoUnit;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import com.azure.libraryms.auth.repository.UserRepository;
 import com.azure.libraryms.book.model.Book;
 import com.azure.libraryms.book.repository.BookRepository;
 import com.azure.libraryms.borrow.dto.request.BorrowRecordCreateRequest;
+import com.azure.libraryms.borrow.dto.request.BorrowRecordsUserRequest;
 import com.azure.libraryms.borrow.dto.resposne.BorrowRecordResponse;
 import com.azure.libraryms.borrow.exceptions.BookUnavailableException;
 import com.azure.libraryms.borrow.exceptions.InvalidBorrowStatusException;
@@ -23,6 +25,7 @@ import com.azure.libraryms.borrow.mapper.BorrowRecordMapper;
 import com.azure.libraryms.borrow.model.BorrowRecord;
 import com.azure.libraryms.borrow.model.BorrowStatus;
 import com.azure.libraryms.borrow.repository.BorrowRecordRepository;
+import com.azure.libraryms.borrow.repository.BorrowRecordSpecification;
 import com.azure.libraryms.common.exception.EntityNotFoundException;
 
 import jakarta.persistence.OptimisticLockException;
@@ -86,7 +89,8 @@ public class BorrowRecordService {
             BigDecimal fineAmount = finePerDay.multiply(BigDecimal.valueOf(overdueDays));
             borrowRecord.setFineAmount(fineAmount);
 
-            // TODO: create a fine payment with payment repository and set the fine payment status to unpaid
+            // TODO: create a fine payment with payment repository and set the fine payment
+            // status to unpaid
         }
 
         Book book = borrowRecord.getBook();
@@ -102,13 +106,28 @@ public class BorrowRecordService {
         return borrowRecordMapper.toBorrowRecordResponse(updatedBorrowRecord);
     }
 
-    public Page<BorrowRecordResponse> getUserBorrowRecords(Long userId, Pageable pageable) {
+    @Transactional(readOnly = true)
+    public Page<BorrowRecordResponse> getUserBorrowRecords(Long userId,
+            BorrowRecordsUserRequest request,
+            Pageable pageable) {
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User", "ID", userId.toString()));
 
-        Page<BorrowRecord> borrowRecords = borrowRecordRepository.findByUser(user, pageable);
+        Specification<BorrowRecord> spec = Specification
+                .where(BorrowRecordSpecification.hasUser(user))
+                .and(BorrowRecordSpecification.hasStatus(request.status()));
 
-        return null;
+        return borrowRecordRepository.findAll(spec, pageable).map(borrowRecordMapper::toBorrowRecordResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<BorrowRecordResponse> getAllBorrowRecords(BorrowRecordsUserRequest request, Pageable pageable) {
+        Specification<BorrowRecord> spec = Specification
+                .where(BorrowRecordSpecification.notDeleted())
+                .and(BorrowRecordSpecification.hasStatus(request.status()));
+
+        return borrowRecordRepository.findAll(spec, pageable).map(borrowRecordMapper::toBorrowRecordResponse);
     }
 
     private void validateBorrowEligibility(User user, Book book) {

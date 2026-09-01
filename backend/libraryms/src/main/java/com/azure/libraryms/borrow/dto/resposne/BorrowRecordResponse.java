@@ -10,7 +10,9 @@ public record BorrowRecordResponse(
     Long userId,
     LocalDate borrowDate,
     LocalDate dueDate,
-    BorrowStatus status
+    BorrowStatus status,
+    LocalDate returnDate,
+    Long fineAmount
 ) {
     
 }
